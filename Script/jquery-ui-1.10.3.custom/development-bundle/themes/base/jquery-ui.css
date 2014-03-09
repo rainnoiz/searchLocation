@@ -6,6 +6,17 @@
 /* Layout helpers
 ----------------------------------*/
 
+div.info {
+    position: absolute;
+    z-index: 999;
+    width: 200px;
+    height: 100px;
+    display: none;
+    background-color: #fff;
+    border: 3px solid #ebebeb;
+    padding: 10px;
+}
+
 section {
     display:inline-block;
     height:98%;
@@ -872,7 +883,6 @@ body .ui-tooltip {
 	font-weight:normal;
 	font-family:  Arial, Helvetica, sans-serif;
 	text-align:center;
-	width: 20%;
 }
 .appendGrid-ui-widget-footer{
 	border: 1px solid #aaaaaa/*{borderColorHeader}*/;

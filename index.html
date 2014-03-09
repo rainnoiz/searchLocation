@@ -7,17 +7,7 @@
     <script src="Script/jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
     <script src="Script/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
     
-    <!--Flexigrid-->  
-    <link href="Plugin/Flexigrid-master/css/flexigrid.css" rel="stylesheet" />
-    <script src="Plugin/Flexigrid-master/js/flexigrid.js"></script>
-
-    <!--jqGrid-->
-    <link href="Plugin/jqGrid/css/ui.jqgrid.css" rel="stylesheet" />
-    <script src="Plugin/jqGrid/js/jquery.jqGrid.min.js"></script>
-
     <!--appendGrid-->
-    <!--link href="Plugin/jQuery-Dynamic-Data-Grid-Plugin-appendGrid/jquery.appendGrid-1.3.0.css" rel="stylesheet" />
-    <script src="Plugin/jQuery-Dynamic-Data-Grid-Plugin-appendGrid/jquery.appendGrid-1.3.0.js"></script-->
     <link href="Plugin/appendGrid/jquery.appendGrid-1.3.1.css" rel="stylesheet" />
     <script src="Plugin/appendGrid/jquery.appendGrid-1.3.1.js"></script>
 
@@ -27,37 +17,46 @@
 
     <script>        //Google Map API
         var map;
-        var markersSub = [];
+        var markersSup = [];
         var markersCus = [];
+        var markerLocation;
         function initialize() {
-            var haightAshbury = new google.maps.LatLng(13.75, 100.517);
+            var location = new google.maps.LatLng(13.75, 100.517);
             var mapOptions = {
                 zoom: 6,
-                center: haightAshbury,
-                //mapTypeId: google.maps.MapTypeId.TERRAIN,
+                center: location,
                 draggable: true,
                 animation: google.maps.Animation.DROP,
             };
             map = new google.maps.Map(document.getElementById('map-canvas'),
                 mapOptions);
-            
-            //google.maps.event.addListener(map, 'click', function (event) {
-            //    addMarker(event.latLng);
-            //});
         }
 
         /*Add a marker to the map and push to the array.*/
-        function AddMarkersSub() {
+        function AddMarkersSup() {
+            //var markerSup = {};
             var location = new google.maps.LatLng(13.75, 100.517);
-            var markerSub = new google.maps.Marker({
+            var markerSup = new google.maps.Marker({
                 position: location,
                 map: map,
                 draggable: true,
                 animation: google.maps.Animation.DROP,
-                icon: 'Image/iconBlue.png'
+                icon: 'Image/iconBlue.png',
+                myID: markersSup.length,
+                supName: ""
             });
-            markersSub.push(markerSub);         
+            markersSup.push(markerSup);
+            //markerSup.set('myID') = markersSup.length;
+            //alert(markerSup.get('myID'));
+            var rowIndex = $('#gridSupplier').appendGrid('getRowIndex', markersSup.length);
+            google.maps.event.addListener(markerSup, 'position_changed', function() {
+                var path = markerSup.getPosition();
+                var rowIndex = $('#gridSupplier').appendGrid('getRowIndex', markerSup.get('myID')); //$('#tblAppendGrid').appendGrid('getRowIndex', uniqueIndex);
+                alert(rowIndex);
+                $('#gridSupplier').appendGrid('setCtrlValue', 'supLocation', rowIndex, path.toString().substring(1, (path.toString().length - 1)));
+            }); 
         }
+
         function AddMarkersCus() {
             var location = new google.maps.LatLng(13.75, 100.517);
             var markerCus = new google.maps.Marker({
@@ -65,23 +64,32 @@
                 map: map,
                 draggable: true,
                 animation: google.maps.Animation.DROP,
-                icon: 'Image/iconPink.png'
-
+                icon: 'Image/iconPink.png',
+                myID: markersCus.length.toString(),
+                cusName: ""
             });
+
             markersCus.push(markerCus);
+            var rowIndex = $('#gridCustomer').appendGrid('getRowIndex', markersCus.length);
+            google.maps.event.addListener(markerCus, 'position_changed', function () {
+                var path = markerCus.getPosition();
+                var rowIndex = $('#gridCustomer').appendGrid('getRowIndex', markersCus.length);
+                $('#gridCustomer').appendGrid('setCtrlValue', 'cusLocation', rowIndex, path.toString().substring(1, (path.toString().length - 1)));
+            });
         }
 
         /*Delete all markers*/
         function DeleteAllMarkers() {
             //Delete markers
-            for (var i = 0; i < markersSub.length; i++) {
-                markersSub[i].setMap(null);
+            for (var i = 0; i < markersSup.length; i++) {
+                markersSup[i].setMap(null);
             }
             for (var i = 0; i < markersCus.length; i++) {
                 markersCus[i].setMap(null);
             }
-            markersSub = [];
-            markersCus = [];
+            //markersSup = [];
+            //markersCus = [];
+            markerLocation.setMap(null);
 
             //Delete row
             DeleteAllRows();
@@ -89,7 +97,7 @@
 
         /*Delete row supplier*/
         function DeleteMapSup(id) {
-            markersSub[id].setMap(null);
+            markersSup[id].setMap(null);
         }
 
         /*Delete row customer*/
@@ -97,8 +105,7 @@
             markersCus[id].setMap(null);
         }
 
-
-        // Dragable marker
+        /* Dragable marker */
         function toggleBounce() {
 
             if (markers.getAnimation() != null) {
@@ -106,6 +113,44 @@
             } else {
                 marker.setAnimation(google.maps.Animation.BOUNCE);
             }
+        }
+
+        /*Show infomation window*/
+        function mapInfoSup(id, info) {
+            var infoWindow = new google.maps.InfoWindow({
+                content: info
+                });
+            infoWindow.open(map, markersSup[id]);
+            markersSup[id].supName = info;
+        }
+
+        function mapInfoCus(id, info)
+        {
+            var infoWindow = new google.maps.InfoWindow({
+                content: info
+            });
+            
+            infoWindow.open(map, markersCus[id]);
+        }
+
+        function CreateLocationMark(lat, lan)
+        {
+            if (markerLocation) {
+                markerLocation.setMap(null);
+                markerLocation = null;
+                
+            }
+            var location = new google.maps.LatLng(lat, lan);
+            markerLocation = new google.maps.Marker({
+                position: location,
+                map: map,
+                animation: google.maps.Animation.DROP,
+                icon: 'Image/iconOrange.png',
+            });
+            var infoWindow = new google.maps.InfoWindow({
+                content: lat + ", " + lan
+            });
+            infoWindow.open(map, markerLocation);
         }
 
         google.maps.event.addDomListener(window, 'load', initialize);
@@ -122,99 +167,6 @@
          });
     </script>
 
-    <script type="text/javascript">//Grid Table
-        /* flexiGrid
-        jQuery(document).ready(function ($) {
-            $('.flexme1').flexigrid();
-        });
-        
-        jQuery(document).ready(function ($) {
-            $(".flexme1").flexigrid({
-                url: 'post2.php',
-                dataType: 'json',
-                colModel: [
-                    { display: 'Supplier Name', name: 'supName', width: 180, sortable: true, align: 'left' },
-                    { display: 'Cost', name: 'cost', width: 120, sortable: true, align: 'left' },
-                    { display: 'Volumn', name: 'valumn', width: 130, sortable: true, align: 'left' },
-                    { display: 'Location Point', name: 'localPoint', width: 80, sortable: true, align: 'right' }
-                ],
-                searchitems: [
-                    { display: 'Supplier Name', name: 'subName' }
-                ],
-                sortname: "supName",
-                sortorder: "asc",
-                showTableToggleBtn: true,
-                width: 'auto',
-                //onSubmit: addFormData,
-                height: 200
-            });
-        });
-        */
-
-        /* jqGrid
-        jQuery(document).ready(function ($) {
-        var data = [[48803, "DSK1", "", "02200220", "OPEN"], [48769, "APPR", "", "77733337", "ENTERED"]];
-
-        $("#grid").jqGrid({
-            datatype: "local",
-            height: 250,
-            colNames: ['Inv No', 'Thingy', 'Blank', 'Number', 'Status'],
-            colModel: [{
-                name: 'id',
-                index: 'id',
-                width: 60,
-                sorttype: "int"
-            },
-            {
-                name: 'thingy',
-                index: 'thingy',
-                width: 90,
-                sorttype: "date"
-            },
-            {
-                name: 'blank',
-                index: 'blank',
-                width: 30
-            },
-            {
-                name: 'number',
-                index: 'number',
-                width: 80,
-                sorttype: "float"
-            },
-            {
-                name: 'status',
-                index: 'status',
-                width: 80,
-                sorttype: "float"
-            }
-            ],
-            caption: "Stack Overflow Example",
-            // ondblClickRow: function(rowid,iRow,iCol,e){alert('double clicked');}
-        });
-
-        var names = ["id", "thingy", "blank", "number", "status"];
-        var mydata = [];
-
-        for (var i = 0; i < data.length; i++) {
-            mydata[i] = {};
-            for (var j = 0; j < data[i].length; j++) {
-                mydata[i][names[j]] = data[i][j];
-            }
-        }
-
-        for (var i = 0; i <= mydata.length; i++) {
-            $("#grid").jqGrid('addRowData', i + 1, mydata[i]);
-        }
-
-       //$("#grid").jqGrid('setGridParam', {onSelectRow: function(rowid,iRow,iCol,e){alert('row clicked');}});
-
-        $("#grid").jqGrid('setGridParam', { ondblClickRow: function (rowid, iRow, iCol, e) { alert('double clicked'); } });
-
-        });
-        */
-        </script>
-
     <script>
         /* appendGrid */
         jQuery(document).ready(function ($) {
@@ -224,12 +176,19 @@
                 $('#gridSupplier').appendGrid({
                     initRows: 0,
                     columns: [
-                    { name: 'subName', display: 'Name', type: 'text', ctrlAttr: { maxlength: 200 }, ctrlCss: { width: '100%' } },
-                    { name: 'subCost', display: 'Costs', type: 'text', ctrlAttr: { maxlength: 100 }, ctrlCss: { width: '100%' } },
-                    { name: 'subQuantity', display: 'Quantities', type: 'text', ctrlAttr: { maxlength: 100 }, ctrlCss: { width: '100%' } },
-                    { name: 'subLat', display: 'Latitude(X)', type: 'text', ctrlAttr: { maxlength: 100 }, ctrlCss: { width: '100%' } },
-                    { name: 'subLong', display: 'Longtitude(Y)', type: 'text', ctrlAttr: { maxlength: 100 }, ctrlCss: { width: '100%' } },
-                    { name: 'subRecordId', type: 'hidden', value: 0 }
+                    {
+                        name: 'supName', display: 'Name', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '30%' },
+                            onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/
+                            {
+                                var id = $('#gridSupplier').appendGrid('getUniqueIndex', rowIndex);
+                                var info = $('#gridSupplier').appendGrid('getCtrlValue', 'supName', rowIndex);
+                                mapInfoSup(id-1,info);
+                            }
+                    },
+                    { name: 'supCost', display: 'Costs', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    { name: 'supQuantity', display: 'Quantities', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    { name: 'supLocation', display: 'Location', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '40%' } },
+                    { name: 'supRecordId', type: 'hidden', value: 0 }
                     ],
                     customRowButtons: [
                         {
@@ -266,21 +225,20 @@
 
                 /*Customer*/
                 $('#gridCustomer').appendGrid({
-                    caption: 'My CD Collections',
                     initRows: 0,
                     columns: [
                     {
-                        name: 'cusName', display: 'Name', type: 'text', ctrlAttr: { maxlength: 200 }, ctrlCss: { width: '100%' }
-                        /*,
-                        onClick: function (evt, rowIndex) {
-                            alert(rowIndex);
-                        }
-                        */
+                      name: 'cusName', display: 'Name', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '30%' },
+                            onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/
+                            {
+                                var id = $('#gridCustomer').appendGrid('getUniqueIndex', rowIndex);
+                                var info = $('#gridCustomer').appendGrid('getCtrlValue', 'cusName', rowIndex);
+                                mapInfoCus(id-1,info);
+                            }
                     },
-                    { name: 'cusCost', display: 'Costs', type: 'text', ctrlAttr: { maxlength: 100 }, ctrlCss: { width: '100%' } },
-                    { name: 'cusQuantity', display: 'Quantities', type: 'text', ctrlAttr: { maxlength: 100 }, ctrlCss: { width: '100%' } },
-                    { name: 'cusLat', display: 'Latitude(X)', type: 'text', ctrlAttr: { maxlength: 100 }, ctrlCss: { width: '100%' } },
-                    { name: 'cusLong', display: 'Longtitude(Y)', type: 'text', ctrlAttr: { maxlength: 100 }, ctrlCss: { width: '100%' } },
+                    { name: 'cusCost', display: 'Costs', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    { name: 'cusQuantity', display: 'Quantities', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    { name: 'cusLocation', display: 'Location', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '40%' } },
                     { name: 'cusRecordId', type: 'hidden', value: 0 }
                     ],
                     customRowButtons: [
@@ -322,19 +280,113 @@
     <script type="text/javascript">
 
         /*Calculate location*/
-        function Submit() {
-            var dataSub = $('#gridSupplier').appendGrid('getAllValue');
-            alert("The data is : " + dataSub[0].subName);
+        function FindLocation() {
+            /*Supplier*/
+            var dataSup = $('#gridSupplier').appendGrid('getAllValue');
+            var i = 0;
+            var checkValue;
+            var dataSubCosts = new Array();
+            for (i = 0; i < dataSup.length; i++) {
+                checkValue = ($('#gridSupplier').appendGrid('getAllValue'))[i].supCost.toString();
+                if (checkValue =="0" || checkValue == "") {
+                    dataSubCosts[i] = "1";
+                }
+                else {
+                    dataSubCosts[i] = checkValue;
+                }
+                
+            }
+            var dataSubQuan = new Array();
+            for (i = 0; i < dataSup.length; i++) {
+                checkValue = ($('#gridSupplier').appendGrid('getAllValue'))[i].supQuantity.toString();
+                if (checkValue == "0" || checkValue == "") {
+                    dataSubQuan[i] = "1";
+                }
+                else {
+                    dataSubQuan[i] = checkValue;
+                }
+            }
+            var dataSubLat = new Array();
+            var dataSubLan = new Array();
+            for (i = 0; i < dataSup.length; i++)
+            {
+                var dataSubLocations = ($('#gridSupplier').appendGrid('getAllValue'))[i].supLocation.toString();
+                var dataSubLocation = dataSubLocations.split(",");
+                dataSubLat[i] = dataSubLocation[0];
+                dataSubLan[i] = dataSubLocation[1];
+            }
+            
+            /*Customer*/
+            var dataCus = $('#gridCustomer').appendGrid('getAllValue');
+            var i = 0;
+            var dataCusCosts = new Array();
+            for (i = 0; i < dataCus.length; i++) {
+                checkValue = ($('#gridCustomer').appendGrid('getAllValue'))[i].cusCost.toString();
+                if (checkValue == "0" || checkValue == "") {
+                    dataCusCosts[i] = "1";
+                }
+                else {
+                    dataCusCosts[i] = checkValue;
+                }
+            }
+            var dataCusQuan = new Array();
+            for (i = 0; i < dataCus.length; i++) {
+                checkValue = ($('#gridCustomer').appendGrid('getAllValue'))[i].cusQuantity.toString();
+                if (checkValue == "0" || checkValue == "") {
+                    dataCusQuan[i] = "1";
+                }
+                else {
+                    dataCusQuan[i] = checkValue;
+                }
+            }
+            var dataCusLat = new Array();
+            var dataCusLan = new Array();
+            for (i = 0; i < dataCus.length; i++) {
+                var dataCusLocations = ($('#gridCustomer').appendGrid('getAllValue'))[i].cusLocation.toString();
+                var dataCusLocation = dataCusLocations.split(",");
+                dataCusLat[i] = dataCusLocation[0];
+                dataCusLan[i] = dataCusLocation[1];
+            }
+
+            /*Calculate Location*/
+            var horizontalSup = 0, verticalSup = 0, horizontalCus = 0, verticalCus = 0, costQuanSup = 0, costQuanCus = 0;
+            var horizontal, vertical, costQuan;
+            var locationLat, locationLan;
+            var rowCountSup = $('#gridSupplier').appendGrid('getRowCount');
+            var rowCountCus = $('#gridCustomer').appendGrid('getRowCount');
+            var j;
+            for (j = 0; j < rowCountSup; j++) {
+                horizontalSup += (dataSubCosts[j] * dataSubQuan[j] * dataSubLat[j]);
+                verticalSup += (dataSubCosts[j] * dataSubQuan[j] * dataSubLan[j]);
+                costQuanSup += dataSubCosts[j] * dataSubQuan[j];
+            }
+            
+            for (j = 0; j < rowCountCus; j++) {
+                horizontalCus += (dataCusCosts[j] * dataCusQuan[j] * dataCusLat[j]);
+                verticalCus += (dataCusCosts[j] * dataCusQuan[j] * dataCusLan[j]);
+                costQuanCus += dataCusCosts[j] * dataCusQuan[j];
+            } 
+            horizontal = horizontalSup + horizontalCus;
+            vertical = verticalSup + verticalCus;
+            costQuan = costQuanSup + costQuanCus;
+            locationLat = horizontal / costQuan;
+            locationLan = vertical / costQuan;
+            //alert(horizontalSup + ", " + horizontalCus);
+            
+            CreateLocationMark(locationLat, locationLan);
         }
+
+
         /*Inser row and marker*/
         function InsertRow(type) {
-            //var idMarker = $('#gridSupplier').appendGrid('insertRow', 1, 2);
             if (type == 1) {
-                $('#gridSupplier').appendGrid('insertRow', 1, 2);
-                AddMarkersSub();
+                var rowCountSup = $('#gridSupplier').appendGrid('getRowCount');
+                $('#gridSupplier').appendGrid('insertRow', 1, rowCountSup);
+                AddMarkersSup();
             }
             else {
-                $('#gridCustomer').appendGrid('insertRow', 1, 2);
+                var rowCountCus = $('#gridCustomer').appendGrid('getRowCount');
+                $('#gridCustomer').appendGrid('insertRow', 1, rowCountCus);
                 AddMarkersCus();
             }
         }
@@ -365,17 +417,12 @@
                 }
             }
         }
-
-        /*
-        function TestAlert() {
-            alert("Click column");
-        }
-        */
     </script>
 
   </head>
   <body>
       <section id="secMap">
+           <div id="myinfo" class="info"><p>I am a div on top of a google map .. </p></div>
           <article id="map-canvas"></article>
       </section>
 
@@ -395,11 +442,11 @@
         </article>
 
         <section id="button">
-          <button id="btnSubmit" onclick="Submit();">Find Location</button>
-          <button id="Button1" onclick="DeleteAllMarkers();">Clear</button>
+          <button id="btnSubmit" onclick="FindLocation();">Find Location</button>
+          <button id="btnClear" onclick="DeleteAllMarkers();">Clear</button>
+            <input id="hidMarkID" type="hidden" />
         </section>
       </section>
-
   </body>
 </html>
 
