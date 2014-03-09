@@ -49,10 +49,9 @@
             //markerSup.set('myID') = markersSup.length;
             //alert(markerSup.get('myID'));
             var rowIndex = $('#gridSupplier').appendGrid('getRowIndex', markersSup.length);
-            google.maps.event.addListener(markerSup, 'position_changed', function() {
+              google.maps.event.addListener(markerSup, 'position_changed', function() {
                 var path = markerSup.getPosition();
-                var rowIndex = $('#gridSupplier').appendGrid('getRowIndex', markerSup.get('myID')); //$('#tblAppendGrid').appendGrid('getRowIndex', uniqueIndex);
-                alert(rowIndex);
+                //var rowIndex = $('#gridSupplier').appendGrid('getRowIndex', markerSup.get('myID')); //$('#tblAppendGrid').appendGrid('getRowIndex', uniqueIndex);
                 $('#gridSupplier').appendGrid('setCtrlValue', 'supLocation', rowIndex, path.toString().substring(1, (path.toString().length - 1)));
             }); 
         }
