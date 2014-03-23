@@ -1,0 +1,744 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Compare Location</title>
+    <!--Theme JQuery-->
+    <link href="Script/jquery-ui-1.10.3.custom/development-bundle/themes/base/jquery-ui.css" rel="stylesheet" />
+    <script src="Script/jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
+    <script src="Script/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
+
+    <!--appendGrid-->
+    <link href="Plugin/appendGrid/jquery.appendGrid-1.3.1.css" rel="stylesheet" />
+    <script src="Plugin/appendGrid/jquery.appendGrid-1.3.1.js"></script>
+
+    <!--Google Map API-->
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <!--<script src="http://maps.google.com/maps/api/js?sensor=false&v=3&libraries=geometry"></script>-->
+
+    <!-- CSS -->
+    <link href="CSS/StyleSheet.css" rel="stylesheet" />
+
+
+    <script>//Google Map API
+        var map;
+        var markersLoc = [];
+        var markersSup = [];
+        var markersCus = [];
+        var markerLocation;
+        var directionsDisplay;
+        //var directionsService = new google.maps.DirectionsService();
+
+        function initialize() {
+            directionsDisplay = new google.maps.DirectionsRenderer();
+            //directionsDisplay2 = new google.maps.DirectionsRenderer();
+
+            var location = new google.maps.LatLng(13.75, 100.517);
+            var mapOptions = {
+                zoom: 6,
+                center: location,
+                draggable: true,
+                animation: google.maps.Animation.DROP
+
+            }
+            map = new google.maps.Map(document.getElementById('map-canvas'),
+                mapOptions);
+            directionsDisplay.setMap(map);
+            //directionsDisplay2.setMap(map);
+        }
+
+        /*Add a marker to the map and push to the array.*/
+        function AddMarkersLoc() {
+            var location = new google.maps.LatLng(13.75, 100.517);
+            var markerLoc = new google.maps.Marker({
+                position: location,
+                map: map,
+                draggable: true,
+                animation: google.maps.Animation.DROP,
+                icon: 'Image/iconStar.png',
+                myID: markersLoc.length,
+                locName: ""
+            });
+            markersLoc.push(markerLoc);
+            var rowIndex = $('#gridLocation').appendGrid('getRowIndex', markersLoc.length);
+            google.maps.event.addListener(markerLoc, 'position_changed', function () {
+                var path = markerLoc.getPosition();
+                var splitLatLongLoc = path.toString().substring(1, (path.toString().length - 1)).split(',');
+                $('#gridLocation').appendGrid('setCtrlValue', 'locLat', rowIndex, Math.floor((parseFloat(splitLatLongLoc[0])) * 100000) / 100000);
+                $('#gridLocation').appendGrid('setCtrlValue', 'locLon', rowIndex, Math.floor((parseFloat(splitLatLongLoc[1])) * 100000) / 100000);
+            });
+        }
+
+        function AddMarkersSup() {
+            //var markerSup = {};
+            var location = new google.maps.LatLng(13.75, 100.517);
+            var markerSup = new google.maps.Marker({
+                position: location,
+                map: map,
+                draggable: true,
+                animation: google.maps.Animation.DROP,
+                icon: 'Image/iconBlue.png',
+                myID: markersSup.length,
+                supName: ""
+            });
+            markersSup.push(markerSup);
+            var rowIndex = $('#gridSupplier').appendGrid('getRowIndex', markersSup.length);
+            google.maps.event.addListener(markerSup, 'position_changed', function () {
+                var path = markerSup.getPosition();
+                var splitLatLongSup = path.toString().substring(1, (path.toString().length - 1)).split(',');
+                $('#gridSupplier').appendGrid('setCtrlValue', 'supLocation', rowIndex, Math.floor((parseFloat(splitLatLongSup[0])) * 100000) / 100000 + ", " + Math.floor((parseFloat(splitLatLongSup[1])) * 100000) / 100000);
+                //$('#gridSupplier').appendGrid('setCtrlValue', 'supLocation', rowIndex, path.toString().substring(1, (path.toString().length - 1)));
+            });
+        }
+
+        function AddMarkersCus() {
+            var location = new google.maps.LatLng(13.75, 100.517);
+            var markerCus = new google.maps.Marker({
+                position: location,
+                map: map,
+                draggable: true,
+                animation: google.maps.Animation.DROP,
+                icon: 'Image/iconPink.png',
+                myID: markersCus.length,
+                cusName: ""
+            });
+
+            markersCus.push(markerCus);
+            var rowIndex = $('#gridCustomer').appendGrid('getRowIndex', markersCus.length);
+            google.maps.event.addListener(markerCus, 'position_changed', function () {
+                var path = markerCus.getPosition();
+                var splitLatLongCus = path.toString().substring(1, (path.toString().length - 1)).split(',');
+                $('#gridCustomer').appendGrid('setCtrlValue', 'cusLocation', rowIndex, Math.floor((parseFloat(splitLatLongCus[0])) * 100000) / 100000 + ", " + Math.floor((parseFloat(splitLatLongCus[1])) * 100000) / 100000);
+                //$('#gridCustomer').appendGrid('setCtrlValue', 'cusLocation', rowIndex, path.toString().substring(1, (path.toString().length - 9)));
+
+            });
+        }
+
+        /*Delete all markers*/
+        function DeleteAllMarkers() {
+            //Delete markers
+            for (var i = 0; i < markersSup.length; i++) {
+                markersSup[i].setMap(null);
+            }
+            for (var i = 0; i < markersCus.length; i++) {
+                markersCus[i].setMap(null);
+            }
+            for (var i = 0; i < markersLoc.length; i++) {
+                markersLoc[i].setMap(null);
+            }
+
+            //Delete row
+            DeleteAllRows();
+        }
+
+        /*Delete row location*/
+        function DeleteMapLoc(id) {
+            markersLoc[id].setMap(null);
+        }
+
+        /*Delete row supplier*/
+        function DeleteMapSup(id) {
+            markersSup[id].setMap(null);
+        }
+
+        /*Delete row customer*/
+        function DeleteMapCus(id) {
+            markersCus[id].setMap(null);
+        }
+
+        /* Dragable marker */
+        function toggleBounce() {
+
+            if (markers.getAnimation() != null) {
+                markers.setAnimation(null);
+            } else {
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+            }
+        }
+
+        /*Show infomation window*/
+        //function mapInfoLocation(id, info) {
+        //    var infoWindow = new google.maps.InfoWindow({
+        //        content: info
+        //    });
+        //    infoWindow.open(map, markersSup[id]);
+        //    markersSup[id].supName = info;
+        //}
+
+        function mapInfoLoc(id, info) {
+            var infoWindow = new google.maps.InfoWindow({
+                content: info
+            });
+            infoWindow.open(map, markersLoc[id]);
+            //markersLoc[id].locName = info;
+        }
+
+        function mapInfoSup(id, info) {
+            var infoWindow = new google.maps.InfoWindow({
+                content: info
+            });
+            infoWindow.open(map, markersSup[id]);
+            //markersSup[id].supName = info;
+        }
+
+        function mapInfoCus(id, info) {
+            var infoWindow = new google.maps.InfoWindow({
+                content: info
+            });
+            infoWindow.open(map, markersCus[id]);
+        }
+
+        function CreateLocationMark(lat, lan) {
+            if (markerLocation) {
+                markerLocation.setMap(null);
+                markerLocation = null;
+
+            }
+            var location = new google.maps.LatLng(lat, lan);
+            markerLocation = new google.maps.Marker({
+                position: location,
+                map: map,
+                animation: google.maps.Animation.DROP,
+                icon: 'Image/iconOrange.png',
+            });
+            var infoWindow = new google.maps.InfoWindow({
+                content: lat + ", " + lan
+            });
+            infoWindow.open(map, markerLocation);
+        }
+        /*Calculate distance*/
+        function findDistance() {
+            //Location
+            var dataLoc = $('#gridLocation').appendGrid('getAllValue');
+            var iLoc = 0;
+            var checkValueLoc;
+            var dataLocLat = new Array();
+            for (iLoc = 0; iLoc < dataLoc.length; iLoc++) {
+                checkValueLoc = ($('#gridLocation').appendGrid('getAllValue'))[iLoc].locLat.toString();
+                if (checkValueLoc == "0" || checkValueLoc == "") {
+                    dataLocLat[iLoc] = "1";
+                }
+                else {
+                    dataLocLat[iLoc] = checkValueLoc;
+                }
+            } 
+            iLoc = 0;
+            var dataLocLon = new Array();
+            for (iLoc = 0; iLoc < dataLoc.length; iLoc++) {
+                checkValueLoc = ($('#gridLocation').appendGrid('getAllValue'))[iLoc].locLon.toString();
+                if (checkValueLoc == "0" || checkValueLoc == "") {
+                    dataLocLon[iLoc] = "1";
+                }
+                else {
+                    dataLocLon[iLoc] = checkValueLoc;
+                }
+            }
+
+            //Supplier
+            var dataSup = $('#gridSupplier').appendGrid('getAllValue');
+            var iSup = 0
+            var dataSupLat = new Array();
+            var dataSupLan = new Array();
+            for (iSup = 0; iSup < dataSup.length; iSup++) {
+                var dataSupLocations = ($('#gridSupplier').appendGrid('getAllValue'))[iSup].supLocation.toString();
+                var dataSupLocation = dataSupLocations.split(",");
+                dataSupLat[iSup] = dataSupLocation[0];
+                dataSupLan[iSup] = dataSupLocation[1];
+            }
+
+            //Calculate
+            var start = new Array();
+            var end = new Array();
+            for (var i = 0; i < dataLocLat.length; i++)
+            {
+                start[i] = dataLocLat[i] + ", " + dataLocLon[i];
+            }
+            for (var i = 0; i < dataSupLat.length; i++)
+            {
+                end[i] = dataSupLat[i] + ", " + dataSupLan[i];
+            }
+            var request = new Array();
+            var iReq = 0;
+            for (var i = 0; i < start.length; i++)
+            {
+                for (var j = 0; j < end.length; j++)
+                {
+                    request[iReq] = {
+                        origin: start[i],
+                        destination: end[j],
+                        travelMode: google.maps.TravelMode.DRIVING
+                    };
+                    iReq++;
+                }
+            }
+            /*
+            var txt="";
+            for (var i = 0; i < request.length; i++) {
+                txt += request[i].origin.toString() + "," + request[i].destination.toString() + " : ";
+            }
+            alert(txt);
+            */
+
+            //Calculate distance
+            var directionsService = new Array();
+            var totalDistance = new Array();
+            var iReq = 0;
+            var legs;
+            for (var i = 0; i < start.length; i++) {
+                var totalDistance = 0;
+                for (var j = 0; j < end.length; j++) {
+                    directionsService[iReq] = new google.maps.DirectionsService();
+                    directionsService[iReq].route(request[iReq], function (response, status) {
+                        if (status == google.maps.DirectionsStatus.OK) {
+                            legs = response.routes[0].legs;
+                            for (var iLeg = 0; iLeg < legs.length; iLeg++) {
+                                totalDistance += legs[iLeg].distance.value; //Math.floor((legs[iLeg].distance.value)/1000)*100;
+                            }
+                        }
+                        alert("1: "+totalDistance); //1
+                    });
+                    alert("2: " + totalDistance); //2
+                }
+            }
+            //for (var i = 0; i < totalDistance.length; i++) {
+            //    alert(totalDistance[i]);
+            //}
+
+            //directionsService[0] = new google.maps.DirectionsService();
+            //directionsService[0].route(request[0], function (response, status) {
+            //    if (status == google.maps.DirectionsStatus.OK)
+            //    {
+            //        var totalDistance = 0;
+            //            var legs = response.routes[0].legs;
+            //            for (var iLeg = 0; iLeg < legs.length; iLeg++) {
+            //                totalDistance += legs[iLeg].distance.value;
+            //            }
+            //            alert(request[0].origin.toString() + "," + request[0].destination.toString() + " distance:" + totalDistance);
+            //    }
+            //});
+
+
+
+
+            //var start = dataLocLat[0] + ", " + dataLocLon[0];
+            //var end = dataSupLat[0] + ", " + dataSupLan[0];
+            //var request = {
+            //    origin: start,
+            //    destination: end,
+            //    travelMode: google.maps.TravelMode.DRIVING
+            //};
+
+            //var start2 = dataLocLat[1] + ", " + dataLocLon[1];
+            //var end2 = dataSupLat[0] + ", " + dataSupLan[0];
+            //var request2 = {
+            //    origin: start2,
+            //    destination: end2,
+            //    travelMode: google.maps.TravelMode.DRIVING
+            //};
+            //var directionsService = new google.maps.DirectionsService();
+            //directionsService.route(request, function (response, status) {
+            //    if (status == google.maps.DirectionsStatus.OK) {
+            //        //var totalDistance = 0;
+            //        //var legs = response.routes[0].legs;
+            //        //for (var iLeg = 0; iLeg < legs.length; iLeg++) {
+            //        //    totalDistance += legs[iLeg].distance.value;
+            //        //}
+            //        directionsDisplay.setDirections(response);
+            //        //alert(totalDistance);
+            //    }
+
+            //});
+            //var directionsService2 = new google.maps.DirectionsService();
+            //directionsService2.route(request2, function (response2, status2) {
+            //    if (status2 == google.maps.DirectionsStatus.OK) {
+            //        directionsDisplay2.setDirections(response2);
+            //    }
+
+            //});
+
+        }
+
+        google.maps.event.addDomListener(window, 'load', initialize);
+
+    </script>
+
+    <script>//Button
+        $(function () {
+            $("button")
+            .button()
+            .click(function (event) {
+                event.preventDefault();
+            });
+        });
+    </script>
+
+    <script>
+        /* appendGrid */
+        jQuery(document).ready(function ($) {
+            $(function () {
+
+                /*Location*/
+                $('#gridLocation').appendGrid({
+                    initRows: 0,
+                    columns: [
+                    {
+                        name: 'locName', display: 'ชื่อ (Name)', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '50%' },
+                        onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/ {
+                            var id = $('#gridLocation').appendGrid('getUniqueIndex', rowIndex);
+                            var info = $('#gridLocation').appendGrid('getCtrlValue', 'locName', rowIndex);
+                            mapInfoLoc(id - 1, info);
+                        }
+                    },
+                    { name: 'locLat', display: 'พิกัดละติจูด (Latitude)', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '25%' } },
+                    { name: 'locLon', display: 'พิกัดลองจิจูด (Longitude)', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '25%' } },
+                    { name: 'locationRecordId', type: 'hidden', value: 0 }
+                    ],
+                    customRowButtons: [
+                        {
+                            uiButton: { icons: { primary: 'ui-icon-trash' } },
+                            click: function (evtObj, uniqueIndex, rowData) {
+                                DeleteRowLoc(uniqueIndex);
+                                DeleteMapLoc(uniqueIndex - 1);
+                            }
+                        }
+                    ],
+                    customFooterButtons: [
+                        {
+                            uiButton: { icons: { primary: 'ui-icon-plusthick' } },
+                            btnCss: { 'color': '#ff0000' },
+                            btnClass: 'append',
+                            click: function (evt) {
+                                InsertRow(0);
+                            },
+                            atTheFront: true
+                        }
+                    ],
+                    caption: null,
+                    hideRowNumColumn: true,
+                    hideButtons: {
+                        moveUp: true,
+                        moveDown: true,
+                        insert: true,
+                        remove: true,
+                        removeLast: true,
+                        append: true
+                    }
+                });
+
+                /*Supplier*/
+                $('#gridSupplier').appendGrid({
+                    initRows: 0,
+                    columns: [
+                    {
+                        name: 'supName', display: 'Name', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '30%' },
+                        onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/ {
+                            var id = $('#gridSupplier').appendGrid('getUniqueIndex', rowIndex);
+                            var info = $('#gridSupplier').appendGrid('getCtrlValue', 'supName', rowIndex);
+                            mapInfoSup(id - 1, info);
+                        }
+                    },
+                    { name: 'supCost', display: 'Costs', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    { name: 'supQuantity', display: 'Quantities', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    { name: 'supLocation', display: 'Location', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '40%' } },
+                    { name: 'supRecordId', type: 'hidden', value: 0 }
+                    ],
+                    customRowButtons: [
+                        {
+                            uiButton: { icons: { primary: 'ui-icon-trash' } },
+                            click: function (evtObj, uniqueIndex, rowData) {
+                                DeleteRowSup(uniqueIndex);
+                                DeleteMapSup(uniqueIndex - 1);
+                            }
+                        }
+                    ],
+                    customFooterButtons: [
+                        {
+                            uiButton: { icons: { primary: 'ui-icon-plusthick' } },
+                            btnCss: { 'color': '#ff0000' },
+                            btnClass: 'append',
+                            click: function (evt) {
+                                InsertRow(1);
+                            },
+                            atTheFront: true
+                        }
+                    ],
+                    caption: null,
+                    hideRowNumColumn: true,
+                    hideButtons: {
+                        moveUp: true,
+                        moveDown: true,
+                        insert: true,
+                        remove: true,
+                        removeLast: true,
+                        append: true
+                    }
+                });
+
+                /*Customer*/
+                $('#gridCustomer').appendGrid({
+                    initRows: 0,
+                    columns: [
+                    {
+                        name: 'cusName', display: 'Name', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '30%' },
+                        onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/ {
+                            var id = $('#gridCustomer').appendGrid('getUniqueIndex', rowIndex);
+                            var info = $('#gridCustomer').appendGrid('getCtrlValue', 'cusName', rowIndex);
+                            mapInfoCus(id - 1, info);
+                        }
+                    },
+                    { name: 'cusCost', display: 'Costs', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    { name: 'cusQuantity', display: 'Quantities', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    { name: 'cusLocation', display: 'Location', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '40%' } },
+                    { name: 'cusRecordId', type: 'hidden', value: 0 }
+                    ],
+                    customRowButtons: [
+                            {
+                                uiButton: { icons: { primary: 'ui-icon-trash' } },
+                                click: function (evtObj, uniqueIndex, rowData) {
+                                    DeleteRowCus(uniqueIndex);
+                                    DeleteMapCus(uniqueIndex - 1);
+                                }
+                            }
+                    ],
+                    customFooterButtons: [
+                        {
+                            uiButton: { icons: { primary: 'ui-icon-plusthick' } },
+                            btnCss: { 'color': '#ff0000' },
+                            btnClass: 'append',
+                            click: function (evt) {
+                                InsertRow(2);
+                            },
+                            atTheFront: true
+                        }
+                    ],
+                    caption: null,
+                    hideRowNumColumn: true,
+                    hideButtons: {
+                        moveUp: true,
+                        moveDown: true,
+                        insert: true,
+                        remove: true,
+                        removeLast: true,
+                        append: true
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script type="text/javascript">
+
+        
+
+        /*Calculate location*/
+        function FindLocation() {
+            /*Supplier*/
+            var dataSup = $('#gridSupplier').appendGrid('getAllValue');
+            var i = 0;
+            var checkValue;
+            var dataSupCosts = new Array();
+            for (i = 0; i < dataSup.length; i++) {
+                checkValue = ($('#gridSupplier').appendGrid('getAllValue'))[i].supCost.toString();
+                if (checkValue == "0" || checkValue == "") {
+                    dataSupCosts[i] = "1";
+                }
+                else {
+                    dataSupCosts[i] = checkValue;
+                }
+
+            }
+            var dataSupQuan = new Array();
+            for (i = 0; i < dataSup.length; i++) {
+                checkValue = ($('#gridSupplier').appendGrid('getAllValue'))[i].supQuantity.toString();
+                if (checkValue == "0" || checkValue == "") {
+                    dataSupQuan[i] = "1";
+                }
+                else {
+                    dataSupQuan[i] = checkValue;
+                }
+            }
+            var dataSupLat = new Array();
+            var dataSupLan = new Array();
+            for (i = 0; i < dataSup.length; i++) {
+                var dataSupLocations = ($('#gridSupplier').appendGrid('getAllValue'))[i].supLocation.toString();
+                var dataSupLocation = dataSupLocations.split(",");
+                dataSupLat[i] = dataSupLocation[0];
+                dataSupLan[i] = dataSupLocation[1];
+            }
+
+            /*Customer*/
+            var dataCus = $('#gridCustomer').appendGrid('getAllValue');
+            var i = 0;
+            var dataCusCosts = new Array();
+            for (i = 0; i < dataCus.length; i++) {
+                checkValue = ($('#gridCustomer').appendGrid('getAllValue'))[i].cusCost.toString();
+                if (checkValue == "0" || checkValue == "") {
+                    dataCusCosts[i] = "1";
+                }
+                else {
+                    dataCusCosts[i] = checkValue;
+                }
+            }
+            var dataCusQuan = new Array();
+            for (i = 0; i < dataCus.length; i++) {
+                checkValue = ($('#gridCustomer').appendGrid('getAllValue'))[i].cusQuantity.toString();
+                if (checkValue == "0" || checkValue == "") {
+                    dataCusQuan[i] = "1";
+                }
+                else {
+                    dataCusQuan[i] = checkValue;
+                }
+            }
+            var dataCusLat = new Array();
+            var dataCusLan = new Array();
+            for (i = 0; i < dataCus.length; i++) {
+                var dataCusLocations = ($('#gridCustomer').appendGrid('getAllValue'))[i].cusLocation.toString();
+                var dataCusLocation = dataCusLocations.split(",");
+                dataCusLat[i] = dataCusLocation[0];
+                dataCusLan[i] = dataCusLocation[1];
+            }
+
+            /*Calculate Location*/
+            var horizontalSup = 0, verticalSup = 0, horizontalCus = 0, verticalCus = 0, costQuanSup = 0, costQuanCus = 0;
+            var horizontal, vertical, costQuan;
+            var locationLat, locationLan;
+            var rowCountSup = $('#gridSupplier').appendGrid('getRowCount');
+            var rowCountCus = $('#gridCustomer').appendGrid('getRowCount');
+            var j;
+            for (j = 0; j < rowCountSup; j++) {
+                horizontalSup += (dataSupCosts[j] * dataSupQuan[j] * dataSupLat[j]);
+                verticalSup += (dataSupCosts[j] * dataSupQuan[j] * dataSupLan[j]);
+                costQuanSup += dataSupCosts[j] * dataSupQuan[j];
+            }
+
+            for (j = 0; j < rowCountCus; j++) {
+                horizontalCus += (dataCusCosts[j] * dataCusQuan[j] * dataCusLat[j]);
+                verticalCus += (dataCusCosts[j] * dataCusQuan[j] * dataCusLan[j]);
+                costQuanCus += dataCusCosts[j] * dataCusQuan[j];
+            }
+            horizontal = horizontalSup + horizontalCus;
+            vertical = verticalSup + verticalCus;
+            costQuan = costQuanSup + costQuanCus;
+            locationLat = horizontal / costQuan;
+            locationLan = vertical / costQuan;
+            //alert(horizontalSup + ", " + horizontalCus);
+
+            CreateLocationMark(locationLat, locationLan);
+        }
+
+
+        /*Insert row and marker*/
+        function InsertRow(type) {
+            if (type == 0) {
+                var rowCountLoc = $('#gridLocation').appendGrid('getRowCount');
+                $('#gridLocation').appendGrid('insertRow', 1, rowCountLoc);
+                AddMarkersLoc();
+            }
+            else if (type == 1) {
+                var rowCountSup = $('#gridSupplier').appendGrid('getRowCount');
+                $('#gridSupplier').appendGrid('insertRow', 1, rowCountSup);
+                AddMarkersSup();
+            }
+            else {
+                var rowCountCus = $('#gridCustomer').appendGrid('getRowCount');
+                $('#gridCustomer').appendGrid('insertRow', 1, rowCountCus);
+                AddMarkersCus();
+            }
+        }
+        /*Delete row for location*/
+        function DeleteRowLoc(uniqueIndex) {
+            var rowIndex = $('#gridLocation').appendGrid('getRowIndex', uniqueIndex);
+            $('#gridLocation').appendGrid('removeRow', rowIndex, uniqueIndex);
+        }
+        /*Delete row for supplier*/
+        function DeleteRowSup(uniqueIndex) {
+            var rowIndex = $('#gridSupplier').appendGrid('getRowIndex', uniqueIndex);
+            $('#gridSupplier').appendGrid('removeRow', rowIndex, uniqueIndex);
+        }
+        /*Delete row for customer*/
+        function DeleteRowCus(uniqueIndex) {
+            var rowIndex = $('#gridCustomer').appendGrid('getRowIndex', uniqueIndex);
+            $('#gridCustomer').appendGrid('removeRow', rowIndex, uniqueIndex);
+        }
+
+        function DeleteAllRows() {
+            var rowCountLoc = $('#gridLocation').appendGrid('getRowCount');
+            if (rowCountLoc > 0) {
+                for (var i = rowCountLoc - 1; i >= 0; i--) {
+                    $('#gridLocation').appendGrid('removeRow', i);
+                }
+            }
+
+            var rowCountSup = $('#gridSupplier').appendGrid('getRowCount');
+            if (rowCountSup > 0) {
+                for (var i = rowCountSup - 1; i >= 0; i--) {
+                    $('#gridSupplier').appendGrid('removeRow', i);
+                }
+            }
+
+            var rowCountCus = $('#gridCustomer').appendGrid('getRowCount');
+            if (rowCountCus > 0) {
+                for (var i = rowCountCus - 1; i >= 0; i--) {
+                    $('#gridCustomer').appendGrid('removeRow', i);
+                }
+            }
+        }
+    </script>
+
+</head>
+<body>
+    <section id="secMap" style="margin-right: 5px">
+        <div id="myinfo" class="info">
+            <p>I am a div on top of a google map .. </p>
+        </div>
+        <article id="map-canvas"></article>
+    </section>
+
+    <section id="secCal" class="ui-accordion ui-widget ui-helper-reset" role="tablist" style="margin-right: 5px">
+        <h3 id="ui-accordion-accordion-header-0" class="ui-accordion-header ui-helper-reset ui-state-default 
+            ui-corner-all ui-accordion-icons"
+            role="tab" aria-controls="ui-accordion-accordion-panel-0"
+            aria-selected="true" tabindex="0">
+            <a href="#" style="font-weight: bold">สถานที่ตั้ง (Location)</a>
+        </h3>
+        <article id="ui-accordion-accordion-panel-0" class="ui-accordion-contentCompareLocation ui-helper-reset ui-widget-content 
+            ui-corner-bottom ui-accordion-content-active"
+            style="display: block; margin-bottom: 5px;"
+            aria-labelledby="ui-accordion-accordion-header-0" role="tabpanel" aria-expanded="true" aria-hidden="false">
+            <table id="gridLocation"></table>
+        </article>
+
+        <h3 id="ui-accordion-accordion-header-1" class="ui-accordion-header ui-helper-reset ui-state-default 
+            ui-corner-all ui-accordion-icons"
+            role="tab" aria-controls="ui-accordion-accordion-panel-0"
+            aria-selected="true" tabindex="0">
+            <a href="#" style="font-weight: bold">บริษัทคู่ค้า (Supplier)</a>
+        </h3>
+        <article id="ui-accordion-accordion-panel-1" class="ui-accordion-contentCompareLocation ui-helper-reset ui-widget-content 
+            ui-corner-bottom ui-accordion-content-active"
+            style="display: block; margin-bottom: 5px;"
+            aria-labelledby="ui-accordion-accordion-header-0" role="tabpanel" aria-expanded="true" aria-hidden="false">
+            <table id="gridSupplier"></table>
+        </article>
+
+        <h3 id="ui-accordion-accordion-header-2" class="ui-accordion-header ui-helper-reset ui-state-default 
+            ui-corner-all ui-accordion-icons"
+            role="tab" aria-controls="ui-accordion-accordion-panel-0"
+            aria-selected="true" tabindex="0">
+            <a href="#" style="font-weight: bold">ลูกค้า (Customer)</a>
+        </h3>
+        <article id="ui-accordion-accordion-panel-2" class="ui-accordion-contentCompareLocation ui-helper-reset ui-widget-content 
+            ui-corner-bottom ui-accordion-content-active"
+            style="display: block; margin-bottom: 5px;"
+            aria-labelledby="ui-accordion-accordion-header-1" role="tabpanel" aria-expanded="true" aria-hidden="false">
+            <table id="gridCustomer"></table>
+        </article>
+
+        <section id="button">
+            <button id="btnSubmit" onclick="findDistance();">Find Location</button>
+            <button id="btnClear" onclick="DeleteAllMarkers();">Clear</button>
+            <input id="hidMarkID" type="hidden" />
+        </section>
+    </section>
+</body>
+</html>
+
