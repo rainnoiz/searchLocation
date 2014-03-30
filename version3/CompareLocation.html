@@ -13,7 +13,7 @@
 
     <!--Google Map API-->
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
-    <!--<script src="http://maps.google.com/maps/api/js?sensor=false&v=3&libraries=geometry"></script>-->
+   
 
     <!-- CSS -->
     <link href="CSS/StyleSheet.css" rel="stylesheet" />
@@ -27,6 +27,7 @@
         var markerLocation;
         var directionsDisplay;
         //var directionsService = new google.maps.DirectionsService();
+        //var directionsService = new Array();
 
         function initialize() {
             directionsDisplay = new google.maps.DirectionsRenderer();
@@ -66,6 +67,14 @@
                 $('#gridLocation').appendGrid('setCtrlValue', 'locLat', rowIndex, Math.floor((parseFloat(splitLatLongLoc[0])) * 100000) / 100000);
                 $('#gridLocation').appendGrid('setCtrlValue', 'locLon', rowIndex, Math.floor((parseFloat(splitLatLongLoc[1])) * 100000) / 100000);
             });
+
+            google.maps.event.addListener(markerLoc, 'click', function () {
+                var info = $('#gridLocation').appendGrid('getCtrlValue', 'locName', rowIndex);
+                var infoWindow = new google.maps.InfoWindow({
+                    content: info
+                });
+                infoWindow.open(map, markerLoc);
+            });
         }
 
         function AddMarkersSup() {
@@ -85,8 +94,17 @@
             google.maps.event.addListener(markerSup, 'position_changed', function () {
                 var path = markerSup.getPosition();
                 var splitLatLongSup = path.toString().substring(1, (path.toString().length - 1)).split(',');
-                $('#gridSupplier').appendGrid('setCtrlValue', 'supLocation', rowIndex, Math.floor((parseFloat(splitLatLongSup[0])) * 100000) / 100000 + ", " + Math.floor((parseFloat(splitLatLongSup[1])) * 100000) / 100000);
-                //$('#gridSupplier').appendGrid('setCtrlValue', 'supLocation', rowIndex, path.toString().substring(1, (path.toString().length - 1)));
+                //$('#gridSupplier').appendGrid('setCtrlValue', 'supLocation', rowIndex, Math.floor((parseFloat(splitLatLongSup[0])) * 100000) / 100000 + ", " + Math.floor((parseFloat(splitLatLongSup[1])) * 100000) / 100000);
+                $('#gridSupplier').appendGrid('setCtrlValue', 'supLat', rowIndex, Math.floor((parseFloat(splitLatLongSup[0])) * 100000) / 100000);
+                $('#gridSupplier').appendGrid('setCtrlValue', 'supLon', rowIndex, Math.floor((parseFloat(splitLatLongSup[1])) * 100000) / 100000);
+            });
+
+            google.maps.event.addListener(markerSup, 'click', function () {
+                var info = $('#gridSupplier').appendGrid('getCtrlValue', 'supName', rowIndex);
+                var infoWindow = new google.maps.InfoWindow({
+                    content: info
+                });
+                infoWindow.open(map, markerSup);
             });
         }
 
@@ -107,14 +125,23 @@
             google.maps.event.addListener(markerCus, 'position_changed', function () {
                 var path = markerCus.getPosition();
                 var splitLatLongCus = path.toString().substring(1, (path.toString().length - 1)).split(',');
-                $('#gridCustomer').appendGrid('setCtrlValue', 'cusLocation', rowIndex, Math.floor((parseFloat(splitLatLongCus[0])) * 100000) / 100000 + ", " + Math.floor((parseFloat(splitLatLongCus[1])) * 100000) / 100000);
-                //$('#gridCustomer').appendGrid('setCtrlValue', 'cusLocation', rowIndex, path.toString().substring(1, (path.toString().length - 9)));
+                //$('#gridCustomer').appendGrid('setCtrlValue', 'cusLocation', rowIndex, Math.floor((parseFloat(splitLatLongCus[0])) * 100000) / 100000 + ", " + Math.floor((parseFloat(splitLatLongCus[1])) * 100000) / 100000);
+                $('#gridCustomer').appendGrid('setCtrlValue', 'cusLat', rowIndex, Math.floor((parseFloat(splitLatLongCus[0])) * 100000) / 100000);
+                $('#gridCustomer').appendGrid('setCtrlValue', 'cusLon', rowIndex, Math.floor((parseFloat(splitLatLongCus[1])) * 100000) / 100000);
 
+            });
+
+            google.maps.event.addListener(markerCus, 'click', function () {
+                var info = $('#gridCustomer').appendGrid('getCtrlValue', 'cusName', rowIndex);
+                var infoWindow = new google.maps.InfoWindow({
+                    content: info
+                });
+                infoWindow.open(map, markerCus);
             });
         }
 
         /*Delete all markers*/
-        function DeleteAllMarkers() {
+        function DeleteAllMarkers() {            
             //Delete markers
             for (var i = 0; i < markersSup.length; i++) {
                 markersSup[i].setMap(null);
@@ -156,20 +183,11 @@
         }
 
         /*Show infomation window*/
-        //function mapInfoLocation(id, info) {
-        //    var infoWindow = new google.maps.InfoWindow({
-        //        content: info
-        //    });
-        //    infoWindow.open(map, markersSup[id]);
-        //    markersSup[id].supName = info;
-        //}
-
         function mapInfoLoc(id, info) {
             var infoWindow = new google.maps.InfoWindow({
                 content: info
             });
             infoWindow.open(map, markersLoc[id]);
-            //markersLoc[id].locName = info;
         }
 
         function mapInfoSup(id, info) {
@@ -177,7 +195,6 @@
                 content: info
             });
             infoWindow.open(map, markersSup[id]);
-            //markersSup[id].supName = info;
         }
 
         function mapInfoCus(id, info) {
@@ -205,156 +222,205 @@
             });
             infoWindow.open(map, markerLocation);
         }
+
         /*Calculate distance*/
         function findDistance() {
+            allLocations = new Array();
+            var value = "";
+            var checkValue;
+            var resultCheckValue = true;
+            var regLatLon = new RegExp('^\\d+(\.\\d+)?$');
+            var regCostQuan = new RegExp('^$|^\\d+$');
+
             //Location
             var dataLoc = $('#gridLocation').appendGrid('getAllValue');
             var iLoc = 0;
-            var checkValueLoc;
+            var checkValue;
             var dataLocLat = new Array();
+
             for (iLoc = 0; iLoc < dataLoc.length; iLoc++) {
-                checkValueLoc = ($('#gridLocation').appendGrid('getAllValue'))[iLoc].locLat.toString();
-                if (checkValueLoc == "0" || checkValueLoc == "") {
-                    dataLocLat[iLoc] = "1";
-                }
-                else {
-                    dataLocLat[iLoc] = checkValueLoc;
-                }
-            } 
+                value = ($('#gridLocation').appendGrid('getAllValue'))[iLoc].locLat.toString()
+                checkValue = regLatLon.test(value);
+                if (checkValue) {
+                    dataLocLat[iLoc] = value;
+                } else { resultCheckValue = false; }
+            }
+
             iLoc = 0;
             var dataLocLon = new Array();
             for (iLoc = 0; iLoc < dataLoc.length; iLoc++) {
-                checkValueLoc = ($('#gridLocation').appendGrid('getAllValue'))[iLoc].locLon.toString();
-                if (checkValueLoc == "0" || checkValueLoc == "") {
-                    dataLocLon[iLoc] = "1";
-                }
-                else {
-                    dataLocLon[iLoc] = checkValueLoc;
-                }
+                value = ($('#gridLocation').appendGrid('getAllValue'))[iLoc].locLon.toString();
+                checkValue = regLatLon.test(value);
+                if (checkValue) {
+                    dataLocLon[iLoc] = value;
+                } else { resultCheckValue = false; }
             }
 
             //Supplier
             var dataSup = $('#gridSupplier').appendGrid('getAllValue');
-            var iSup = 0
             var dataSupLat = new Array();
-            var dataSupLan = new Array();
-            for (iSup = 0; iSup < dataSup.length; iSup++) {
-                var dataSupLocations = ($('#gridSupplier').appendGrid('getAllValue'))[iSup].supLocation.toString();
-                var dataSupLocation = dataSupLocations.split(",");
-                dataSupLat[iSup] = dataSupLocation[0];
-                dataSupLan[iSup] = dataSupLocation[1];
+            var dataSupLon = new Array();
+            var dataSupCost = new Array();
+            var dataSupQuan = new Array();
+            for (var iSup = 0; iSup < dataSup.length; iSup++) {
+                //validate lat/lon
+                value = ($('#gridSupplier').appendGrid('getAllValue'))[iSup].supLat.toString();
+                checkValue = regLatLon.test(value);
+                if (checkValue) {
+                    dataSupLat[iSup] = value;
+                } else { resultCheckValue = false; }
+                value = ($('#gridSupplier').appendGrid('getAllValue'))[iSup].supLon.toString();
+                checkValue = regLatLon.test(value);
+                if (checkValue) {
+                    dataSupLon[iSup] = value;
+                } else { resultCheckValue = false; }
+
+                //validate cost/quantities
+                value = ($('#gridSupplier').appendGrid('getAllValue'))[iSup].supCost.toString();
+                checkValue = regCostQuan.test(value);
+                if (checkValue) {
+                    if (value == "0" || value == "") {
+                        dataSupCost[iSup] = "1";
+                    }
+                    else {
+                        dataSupCost[iSup] = value;
+                    }
+                } else { resultCheckValue = false; }
+                value = ($('#gridSupplier').appendGrid('getAllValue'))[iSup].supQuantity.toString();
+                checkValue = regCostQuan.test(value);
+                if (checkValue) {
+                    if (value == "0" || value == "") {
+                        dataSupQuan[iSup] = "1";
+                    }
+                    else {
+                        dataSupQuan[iSup] = value;
+                    }
+                } else { resultCheckValue = false; }
             }
 
-            //Calculate
-            var start = new Array();
-            var end = new Array();
-            for (var i = 0; i < dataLocLat.length; i++)
-            {
-                start[i] = dataLocLat[i] + ", " + dataLocLon[i];
-            }
-            for (var i = 0; i < dataSupLat.length; i++)
-            {
-                end[i] = dataSupLat[i] + ", " + dataSupLan[i];
-            }
-            var request = new Array();
-            var iReq = 0;
-            for (var i = 0; i < start.length; i++)
-            {
-                for (var j = 0; j < end.length; j++)
-                {
-                    request[iReq] = {
-                        origin: start[i],
-                        destination: end[j],
-                        travelMode: google.maps.TravelMode.DRIVING
-                    };
-                    iReq++;
-                }
-            }
-            /*
-            var txt="";
-            for (var i = 0; i < request.length; i++) {
-                txt += request[i].origin.toString() + "," + request[i].destination.toString() + " : ";
-            }
-            alert(txt);
-            */
+            //Customer
+            var dataCus = $('#gridCustomer').appendGrid('getAllValue');
+            var dataCusLat = new Array();
+            var dataCusLon = new Array();
+            var dataCusCost = new Array();
+            var dataCusQuan = new Array();
+            for (var iCus = 0; iCus < dataCus.length; iCus++) {
+                //validate lat/lon
+                value = ($('#gridCustomer').appendGrid('getAllValue'))[iCus].cusLat.toString();
+                checkValue = regLatLon.test(value);
+                if (checkValue) {
+                    dataCusLat[iCus] = value;
+                } else { resultCheckValue = false; }
+                value = ($('#gridCustomer').appendGrid('getAllValue'))[iCus].cusLon.toString();
+                checkValue = regLatLon.test(value);
+                if (checkValue) {
+                    dataCusLon[iCus] = value;
+                } else { resultCheckValue = false; }
 
-            //Calculate distance
-            var directionsService = new Array();
-            var totalDistance = new Array();
-            var iReq = 0;
-            var legs;
-            for (var i = 0; i < start.length; i++) {
-                var totalDistance = 0;
-                for (var j = 0; j < end.length; j++) {
-                    directionsService[iReq] = new google.maps.DirectionsService();
-                    directionsService[iReq].route(request[iReq], function (response, status) {
-                        if (status == google.maps.DirectionsStatus.OK) {
-                            legs = response.routes[0].legs;
-                            for (var iLeg = 0; iLeg < legs.length; iLeg++) {
-                                totalDistance += legs[iLeg].distance.value; //Math.floor((legs[iLeg].distance.value)/1000)*100;
-                            }
-                        }
-                        alert("1: "+totalDistance); //1
-                    });
-                    alert("2: " + totalDistance); //2
-                }
+                //validate cost/quantities
+                value = ($('#gridCustomer').appendGrid('getAllValue'))[iCus].cusCost.toString();
+                checkValue = regCostQuan.test(value);
+                if (checkValue) {
+                    if (value == "0" || value == "") {
+                        dataCusCost[iCus] = "1";
+                    }
+                    else {
+                        dataCusCost[iCus] = value;
+                    }
+                } else { resultCheckValue = false; }
+                value = ($('#gridCustomer').appendGrid('getAllValue'))[iCus].cusQuantity.toString();
+                checkValue = regCostQuan.test(value);
+                if (checkValue) {
+                    if (value == "0" || value == "") {
+                        dataCusQuan[iCus] = "1";
+                    }
+                    else {
+                        dataCusQuan[iCus] = value;
+                    }
+                } else { resultCheckValue = false; }
             }
-            //for (var i = 0; i < totalDistance.length; i++) {
-            //    alert(totalDistance[i]);
+
+            //ตรวจสอบค่า
+            //for (i = 0; i < dataLocLon.length; i++)
+            //{
+            //    alert("dataLocLat:" + dataLocLat[i] + " dataLocLon:" + dataLocLon[i]);
+            //}
+            //for (i = 0; i < dataSupLat.length; i++) {
+            //    alert("dataSupCost:" + dataSupCost[i] + " dataSupQuan:" + dataSupQuan[i] +
+            //        "dataSupLat:" + dataSupLat[i] + " dataSupLon:" + dataSupLon[i]);
+            //}
+            //for (i = 0; i < dataCusLat.length; i++) {
+            //    alert("dataCusCost:" + dataCusCost[i] + " dataCusQuan:" + dataCusQuan[i] +
+            //        "dataCusLat:" + dataCusLat[i] + " dataCusLon:" + dataCusLon[i]);
             //}
 
-            //directionsService[0] = new google.maps.DirectionsService();
-            //directionsService[0].route(request[0], function (response, status) {
-            //    if (status == google.maps.DirectionsStatus.OK)
-            //    {
-            //        var totalDistance = 0;
-            //            var legs = response.routes[0].legs;
-            //            for (var iLeg = 0; iLeg < legs.length; iLeg++) {
-            //                totalDistance += legs[iLeg].distance.value;
-            //            }
-            //            alert(request[0].origin.toString() + "," + request[0].destination.toString() + " distance:" + totalDistance);
-            //    }
-            //});
+            if (resultCheckValue) {
+                //Calculate
+                var start = new Array();
+                var end = new Array();
+                var endSup = new Array();
+                var endCus = new Array();
 
+                for (var i = 0; i < dataLocLat.length; i++) {
+                    start[i] = dataLocLat[i] + ", " + dataLocLon[i];
+                }
+                for (var i = 0; i < dataSupLat.length; i++) {
+                    endSup[i] = dataSupLat[i] + ", " + dataSupLon[i];
+                }
+                for (var i = 0; i < dataCusLat.length; i++) {
+                    endCus[i] = dataCusLat[i] + ", " + dataCusLon[i];
+                }
+                end = endSup.concat(endCus); //Merge array
 
+                var request = new Array();
+                var iReq = 0;
+                for (var i = 0; i < start.length; i++) {
+                    for (var j = 0; j < end.length; j++) {
+                        request[iReq] = {
+                            origin: start[i],
+                            destination: end[j],
+                            //provideRouteAlternatives: true,
+                            travelMode: google.maps.TravelMode.DRIVING
+                        };
+                        iReq++;
+                    }
+                }
+                //Calculate distance
+                CalculateDistances(start, end, request);
 
+            } else { alert("กรุณาระบุ ต้นทุน(Cost) / ปริมาณ(Quantities) / พิกัดละติจูน / พิกัดลองจิจูด เป็นตัวเลขหรือไม่ระบุ"); } 
+        }
 
-            //var start = dataLocLat[0] + ", " + dataLocLon[0];
-            //var end = dataSupLat[0] + ", " + dataSupLan[0];
-            //var request = {
-            //    origin: start,
-            //    destination: end,
-            //    travelMode: google.maps.TravelMode.DRIVING
-            //};
+        var directionsService; //= new Array();
+        function CalculateDistances(start, end, request) {
+            var totalDistance = 0;
+            var inputEnd = end.length;
+            var inputStart = 0;
+            var a = 0;
+            for (var i = 0; i < request.length; i++) {
+                directionsService = new google.maps.DirectionsService();
+                directionsService.route(request[i], function (response, status) {
+                    if (status == google.maps.DirectionsStatus.OK) {
+                        totalDistance += response.routes[0].legs[0].distance.value;
+                        inputEnd--;
+                    }
+                    if (inputEnd == 0) {
+                        finishCalculateDistances(inputStart, totalDistance);
+                        inputEnd = end.length;
+                        inputStart++;
+                        totalDistance = 0;
+                    }
+                });
+            }
+        }
 
-            //var start2 = dataLocLat[1] + ", " + dataLocLon[1];
-            //var end2 = dataSupLat[0] + ", " + dataSupLan[0];
-            //var request2 = {
-            //    origin: start2,
-            //    destination: end2,
-            //    travelMode: google.maps.TravelMode.DRIVING
-            //};
-            //var directionsService = new google.maps.DirectionsService();
-            //directionsService.route(request, function (response, status) {
-            //    if (status == google.maps.DirectionsStatus.OK) {
-            //        //var totalDistance = 0;
-            //        //var legs = response.routes[0].legs;
-            //        //for (var iLeg = 0; iLeg < legs.length; iLeg++) {
-            //        //    totalDistance += legs[iLeg].distance.value;
-            //        //}
-            //        directionsDisplay.setDirections(response);
-            //        //alert(totalDistance);
-            //    }
-
-            //});
-            //var directionsService2 = new google.maps.DirectionsService();
-            //directionsService2.route(request2, function (response2, status2) {
-            //    if (status2 == google.maps.DirectionsStatus.OK) {
-            //        directionsDisplay2.setDirections(response2);
-            //    }
-
-            //});
-
+        var allLocations;
+        function finishCalculateDistances(inputStart,totalDistance) {
+            //alert("finish: "+totalDistance);
+            allLocations[inputStart] = totalDistance;
+            for (var i = 0; i < allLocations.length; i++) {
+                alert(allLocations[i] + "i: " + i);
+            }
         }
 
         google.maps.event.addDomListener(window, 'load', initialize);
@@ -381,15 +447,15 @@
                     initRows: 0,
                     columns: [
                     {
-                        name: 'locName', display: 'ชื่อ (Name)', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '50%' },
+                        name: 'locName', display: 'ชื่อสถานที่ตั้ง', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '50%' },
                         onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/ {
                             var id = $('#gridLocation').appendGrid('getUniqueIndex', rowIndex);
                             var info = $('#gridLocation').appendGrid('getCtrlValue', 'locName', rowIndex);
                             mapInfoLoc(id - 1, info);
                         }
                     },
-                    { name: 'locLat', display: 'พิกัดละติจูด (Latitude)', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '25%' } },
-                    { name: 'locLon', display: 'พิกัดลองจิจูด (Longitude)', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '25%' } },
+                    { name: 'locLat', display: 'พิกัดละติจูด', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '25%' } },
+                    { name: 'locLon', display: 'พิกัดลองจิจูด', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '25%' } },
                     { name: 'locationRecordId', type: 'hidden', value: 0 }
                     ],
                     customRowButtons: [
@@ -429,16 +495,18 @@
                     initRows: 0,
                     columns: [
                     {
-                        name: 'supName', display: 'Name', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '30%' },
+                        name: 'supName', display: 'ชื่อคู่ค้า', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '30%' },
                         onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/ {
                             var id = $('#gridSupplier').appendGrid('getUniqueIndex', rowIndex);
                             var info = $('#gridSupplier').appendGrid('getCtrlValue', 'supName', rowIndex);
                             mapInfoSup(id - 1, info);
                         }
                     },
-                    { name: 'supCost', display: 'Costs', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
-                    { name: 'supQuantity', display: 'Quantities', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
-                    { name: 'supLocation', display: 'Location', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '40%' } },
+                    { name: 'supCost', display: 'ต้นทุน', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    { name: 'supQuantity', display: 'ปริมาณ', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    //{ name: 'supLocation', display: 'Location', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '40%' } },
+                    { name: 'supLat', display: 'พิกัดละติจูด', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '20%' } },
+                    { name: 'supLon', display: 'พิกัดลองจิจูด', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '20%' } },
                     { name: 'supRecordId', type: 'hidden', value: 0 }
                     ],
                     customRowButtons: [
@@ -478,16 +546,18 @@
                     initRows: 0,
                     columns: [
                     {
-                        name: 'cusName', display: 'Name', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '30%' },
+                        name: 'cusName', display: 'ชื่อลูกค้า', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '30%' },
                         onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/ {
                             var id = $('#gridCustomer').appendGrid('getUniqueIndex', rowIndex);
                             var info = $('#gridCustomer').appendGrid('getCtrlValue', 'cusName', rowIndex);
                             mapInfoCus(id - 1, info);
                         }
                     },
-                    { name: 'cusCost', display: 'Costs', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
-                    { name: 'cusQuantity', display: 'Quantities', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
-                    { name: 'cusLocation', display: 'Location', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '40%' } },
+                    { name: 'cusCost', display: 'ต้นทุน', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    { name: 'cusQuantity', display: 'ปริมาณ', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' } },
+                    //{ name: 'cusLocation', display: 'Location', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '40%' } },
+                    { name: 'cusLat', display: 'พิกัดละติจูด', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '20%' } },
+                    { name: 'cusLon', display: 'พิกัดลองจิจูด', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '20%' } },
                     { name: 'cusRecordId', type: 'hidden', value: 0 }
                     ],
                     customRowButtons: [
@@ -526,67 +596,88 @@
     </script>
 
     <script type="text/javascript">
+        /*Check LatLon supplier*/
+        function CheckFindLocation() {
+            var dataLocChk = $('#gridLocation').appendGrid('getAllValue');
+            var dataSup = $('#gridSupplier').appendGrid('getAllValue');
+            var dataCus = $('#gridCustomer').appendGrid('getAllValue');
+            if ((dataLocChk.length > 0) && (dataSup.length > 0 || dataCus.length > 0)) {
+                findDistance();
+            }
+            else { alert("กรุณาระบุข้อมูล สถานที่ตั้ง(Location) / คู่ค้า(Supplier) หรือ ลูกค้า(Customer)");}
+        }
 
-        
-
-        /*Calculate location*/
+        /*
+        /*Calculate location
         function FindLocation() {
-            /*Supplier*/
+            var checkValue;
+            var resultCheckValue = true;
+
+            //Supplier
             var dataSup = $('#gridSupplier').appendGrid('getAllValue');
             var i = 0;
-            var checkValue;
+            var reg = new RegExp('^$|^\\d+$');
+
             var dataSupCosts = new Array();
             for (i = 0; i < dataSup.length; i++) {
-                checkValue = ($('#gridSupplier').appendGrid('getAllValue'))[i].supCost.toString();
-                if (checkValue == "0" || checkValue == "") {
-                    dataSupCosts[i] = "1";
-                }
-                else {
-                    dataSupCosts[i] = checkValue;
-                }
+                checkValue = reg.test(($('#gridSupplier').appendGrid('getAllValue'))[i].supCost.toString());
+                if (checkValue) {
+                    if (checkValue == "0" || checkValue == "") {
+                        dataSupCosts[i] = "1";
+                    }
+                    else {
+                        dataSupCosts[i] = checkValue;
+                    }
+                } else { resultCheckValue = false; }
 
             }
             var dataSupQuan = new Array();
             for (i = 0; i < dataSup.length; i++) {
-                checkValue = ($('#gridSupplier').appendGrid('getAllValue'))[i].supQuantity.toString();
-                if (checkValue == "0" || checkValue == "") {
-                    dataSupQuan[i] = "1";
-                }
-                else {
-                    dataSupQuan[i] = checkValue;
-                }
+                checkValue = reg.test(($('#gridSupplier').appendGrid('getAllValue'))[i].supQuantity.toString());
+                if (checkValue) {
+                    if (checkValue == "0" || checkValue == "") {
+                        dataSupQuan[i] = "1";
+                    }
+                    else {
+                        dataSupQuan[i] = checkValue;
+                    }
+                } else { resultCheckValue = false; }
             }
             var dataSupLat = new Array();
-            var dataSupLan = new Array();
+            var dataSupLon = new Array();
             for (i = 0; i < dataSup.length; i++) {
                 var dataSupLocations = ($('#gridSupplier').appendGrid('getAllValue'))[i].supLocation.toString();
                 var dataSupLocation = dataSupLocations.split(",");
                 dataSupLat[i] = dataSupLocation[0];
-                dataSupLan[i] = dataSupLocation[1];
+                dataSupLon[i] = dataSupLocation[1];
             }
 
-            /*Customer*/
+            //Customer
             var dataCus = $('#gridCustomer').appendGrid('getAllValue');
             var i = 0;
             var dataCusCosts = new Array();
             for (i = 0; i < dataCus.length; i++) {
-                checkValue = ($('#gridCustomer').appendGrid('getAllValue'))[i].cusCost.toString();
-                if (checkValue == "0" || checkValue == "") {
-                    dataCusCosts[i] = "1";
-                }
-                else {
-                    dataCusCosts[i] = checkValue;
-                }
+                checkValue = reg.test(($('#gridCustomer').appendGrid('getAllValue'))[i].cusCost.toString());
+                if (checkValue) {
+                    if (checkValue == "0" || checkValue == "") {
+                        dataCusCosts[i] = "1";
+                    }
+                    else {
+                        dataCusCosts[i] = checkValue;
+                    }
+                } else { resultCheckValue = false; }
             }
             var dataCusQuan = new Array();
             for (i = 0; i < dataCus.length; i++) {
-                checkValue = ($('#gridCustomer').appendGrid('getAllValue'))[i].cusQuantity.toString();
-                if (checkValue == "0" || checkValue == "") {
-                    dataCusQuan[i] = "1";
-                }
-                else {
-                    dataCusQuan[i] = checkValue;
-                }
+                checkValue = reg.test(($('#gridCustomer').appendGrid('getAllValue'))[i].cusQuantity.toString());
+                if (checkValue) {
+                    if (checkValue == "0" || checkValue == "") {
+                        dataCusQuan[i] = "1";
+                    }
+                    else {
+                        dataCusQuan[i] = checkValue;
+                    }
+                } else { resultCheckValue = false; }
             }
             var dataCusLat = new Array();
             var dataCusLan = new Array();
@@ -596,8 +687,17 @@
                 dataCusLat[i] = dataCusLocation[0];
                 dataCusLan[i] = dataCusLocation[1];
             }
+            if (resultCheckValue) {
+                CalculateLocation(dataSubCosts, dataSubQuan, dataSubLat, dataSubLan,
+                                    dataCusCosts, dataCusQuan, dataCusLat, dataCusLan);
+            }
+            else { alert("กรุณาระบุ ต้นทุน(Cost) และปริมาณ(Quantities) เป็นตัวเลขหรือไม่ระบุเท่านั้น"); }
+        }
+        */
 
-            /*Calculate Location*/
+        /*Calculate Location*/
+        function CalculateLocation(dataSubCosts, dataSubQuan, dataSubLat, dataSubLan,
+                                dataCusCosts, dataCusQuan, dataCusLat, dataCusLan) {
             var horizontalSup = 0, verticalSup = 0, horizontalCus = 0, verticalCus = 0, costQuanSup = 0, costQuanCus = 0;
             var horizontal, vertical, costQuan;
             var locationLat, locationLan;
@@ -606,7 +706,7 @@
             var j;
             for (j = 0; j < rowCountSup; j++) {
                 horizontalSup += (dataSupCosts[j] * dataSupQuan[j] * dataSupLat[j]);
-                verticalSup += (dataSupCosts[j] * dataSupQuan[j] * dataSupLan[j]);
+                verticalSup += (dataSupCosts[j] * dataSupQuan[j] * dataSupLon[j]);
                 costQuanSup += dataSupCosts[j] * dataSupQuan[j];
             }
 
@@ -620,9 +720,8 @@
             costQuan = costQuanSup + costQuanCus;
             locationLat = horizontal / costQuan;
             locationLan = vertical / costQuan;
-            //alert(horizontalSup + ", " + horizontalCus);
 
-            CreateLocationMark(locationLat, locationLan);
+            CreateLocationMark(Math.floor((parseFloat(locationLat)) * 100000) / 100000, Math.floor((parseFloat(locationLan)) * 100000) / 100000);
         }
 
 
@@ -631,16 +730,24 @@
             if (type == 0) {
                 var rowCountLoc = $('#gridLocation').appendGrid('getRowCount');
                 $('#gridLocation').appendGrid('insertRow', 1, rowCountLoc);
+                $('#gridLocation').appendGrid('setCtrlValue', 'locLat', rowCountLoc, '13.75');
+                $('#gridLocation').appendGrid('setCtrlValue', 'locLon', rowCountLoc, '100.517');
                 AddMarkersLoc();
             }
             else if (type == 1) {
                 var rowCountSup = $('#gridSupplier').appendGrid('getRowCount');
                 $('#gridSupplier').appendGrid('insertRow', 1, rowCountSup);
+                //$('#gridSupplier').appendGrid('setCtrlValue', 'supLocation', rowCountSup, '13.75, 100.517');
+                $('#gridSupplier').appendGrid('setCtrlValue', 'supLat', rowCountSup, '13.75');
+                $('#gridSupplier').appendGrid('setCtrlValue', 'supLon', rowCountSup, '100.517');
                 AddMarkersSup();
             }
             else {
                 var rowCountCus = $('#gridCustomer').appendGrid('getRowCount');
                 $('#gridCustomer').appendGrid('insertRow', 1, rowCountCus);
+                //$('#gridCustomer').appendGrid('setCtrlValue', 'cusLocation', rowCountCus, '13.75, 100.517');
+                $('#gridCustomer').appendGrid('setCtrlValue', 'cusLat', rowCountCus, '13.75');
+                $('#gridCustomer').appendGrid('setCtrlValue', 'cusLon', rowCountCus, '100.517');
                 AddMarkersCus();
             }
         }
@@ -685,7 +792,15 @@
     </script>
 
 </head>
-<body>
+<body style="background-color: #F4F4F4">
+
+    <div id="menuBar" style="margin: auto">
+        <script>
+            $("#menuBar").load("Menubar.htm");
+            $("#compareLocation").addClass("current");
+        </script>
+    </div>
+
     <section id="secMap" style="margin-right: 5px">
         <div id="myinfo" class="info">
             <p>I am a div on top of a google map .. </p>
@@ -734,7 +849,7 @@
         </article>
 
         <section id="button">
-            <button id="btnSubmit" onclick="findDistance();">Find Location</button>
+            <button id="btnSubmit" onclick="CheckFindLocation();">Find Location</button>
             <button id="btnClear" onclick="DeleteAllMarkers();">Clear</button>
             <input id="hidMarkID" type="hidden" />
         </section>

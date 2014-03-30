@@ -27,16 +27,17 @@ html, body, #map-canvas {
     padding: 0px
 }
     section#secMap {
+        height:90%;
         width:49%;
         text-decoration:none;
         border: 1px solid #aaaaaa;
-        margin:5px 0 5px 5px;
+        margin:0px 0 5px 5px;
     }
     section#secCal {
-        height: 93%;
+        height: 84.5%;
         text-decoration:none;
         position:absolute;
-        margin:5px 5px 0 0;
+        margin:0px 5px 0 0;
     }
 	section#button
 	{
@@ -234,14 +235,14 @@ html, body, #map-canvas {
 	/*padding: 1em 2.2em;*/
 	border-top: 0;
 	overflow: auto;
-	height:42.9%;
+	height:43%;
 }
 
 .ui-accordion .ui-accordion-contentCompareLocation {
 	/*padding: 1em 2.2em;*/
 	border-top: 0;
 	overflow: auto;
-	height:26.5%;
+	height:26.3%;
 }
 
 .ui-autocomplete {
