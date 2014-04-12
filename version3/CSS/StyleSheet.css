@@ -107,7 +107,7 @@ a {
 	position: absolute;
 	top: 35px;
 	left: 0;
-	background: #ddd url(../Image/gradient.png) gradient.png) repeat-x 0 0;
+	background: #ddd url(../Image/gradient.png) repeat-x 0 0;
 	border: solid 1px #b4b4b4;
 
 	-webkit-border-radius: 10px;
@@ -170,3 +170,46 @@ html[xmlns] #nav {
 * html #nav {
 	height: 1%;
 }
+#menuBar {
+	text-align:center;
+	height:50px;
+}
+body#compareLocation {
+	height:100%;
+}
+
+#secMap {
+    height: calc(100% - 57px);
+    width:49%;
+    text-decoration:none;
+    border: 1px solid #aaaaaa;
+    margin:0px 0 5px 5px;
+}
+#secCal {
+    height: calc(100% - 57px);
+    text-decoration:none;
+    position:absolute;
+    margin:0px 5px 0 0;
+}
+#button
+{
+	height:20px;
+	margin: 1% 0;
+	float:right;
+}
+
+.ui-accordion .ui-accordion-contentCompareLocation {
+	/*padding: 1em 2.2em;*/
+	border-top: 0;
+	overflow: auto;
+	height:calc(79% / 3);
+}
+#indexPage {
+    text-align:center;
+}
+#btnSubmit, #btnClear {
+    -webkit-border-radius: 1.6em;
+	-moz-border-radius: 1.6em;
+}
+
+

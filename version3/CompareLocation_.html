@@ -204,6 +204,25 @@
             infoWindow.open(map, markersCus[id]);
         }
 
+        function CreateLocationMark(lat, lan) {
+            if (markerLocation) {
+                markerLocation.setMap(null);
+                markerLocation = null;
+
+            }
+            var location = new google.maps.LatLng(lat, lan);
+            markerLocation = new google.maps.Marker({
+                position: location,
+                map: map,
+                animation: google.maps.Animation.DROP,
+                icon: 'Image/iconOrange.png',
+            });
+            var infoWindow = new google.maps.InfoWindow({
+                content: lat + ", " + lan
+            });
+            infoWindow.open(map, markerLocation);
+        }
+
         /*Calculate distance*/
         function findDistance() {
             allLocations = new Array();
@@ -361,7 +380,6 @@
                             origin: start[i],
                             destination: end[j],
                             //provideRouteAlternatives: true,
-                            optimizeWaypoints: true,
                             travelMode: google.maps.TravelMode.DRIVING
                         };
                         iReq++;
@@ -382,37 +400,39 @@
             }
         }
 
-        var directionsService;
+        var directionsService; //= new Array();
         function CalculateDistances(start, end, request) {
             var totalDistance = 0;
             var inputEnd = end.length;
             var inputStart = 0;
             var a = 0;
             for (var i = 0; i < request.length; i++) {
+                //var delay = 1000 //1 seconds
+                //setTimeout(function () {
+                sleep(200);
                 directionsService = new google.maps.DirectionsService();
                 directionsService.route(request[i], function (response, status) {
                     if (status == google.maps.DirectionsStatus.OK) {
-                        totalDistance += (response.routes[0].legs[0].distance.value)/1000;
+                        totalDistance += response.routes[0].legs[0].distance.value;
                         inputEnd--;
                     }
                     if (inputEnd == 0) {
-                        finishCalculateDistances(inputStart, totalDistance.toFixed(2));
+                        finishCalculateDistances(inputStart, totalDistance);
                         inputEnd = end.length;
                         inputStart++;
                         totalDistance = 0;
                     }
                 });
-                sleep(300);
+                //},delay)
             }
         }
 
         var allLocations;
         function finishCalculateDistances(inputStart,totalDistance) {
             allLocations[inputStart] = totalDistance;
-            //for (var i = 0; i < allLocations.length; i++) {
-            //    alert(allLocations[i] + "i: " + i);
-            //}
-            $('#gridLocation').appendGrid('setCtrlValue', 'locScore', inputStart, allLocations[inputStart]);
+            for (var i = 0; i < allLocations.length; i++) {
+                alert(allLocations[i] + "i: " + i);
+            }
         }
 
         google.maps.event.addDomListener(window, 'load', initialize);
@@ -439,7 +459,7 @@
                     initRows: 0,
                     columns: [
                     {
-                        name: 'locName', display: 'ชื่อสถานที่ตั้ง', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '35%' },
+                        name: 'locName', display: 'ชื่อสถานที่ตั้ง', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '50%' },
                         onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/ {
                             var id = $('#gridLocation').appendGrid('getUniqueIndex', rowIndex);
                             var info = $('#gridLocation').appendGrid('getCtrlValue', 'locName', rowIndex);
@@ -448,7 +468,6 @@
                     },
                     { name: 'locLat', display: 'พิกัดละติจูด', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '25%' } },
                     { name: 'locLon', display: 'พิกัดลองจิจูด', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '25%' } },
-                    { name: 'locScore', display: 'คะแนน', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' }, ctrlCss: { 'color': 'red' } },
                     { name: 'locationRecordId', type: 'hidden', value: 0 }
                     ],
                     customRowButtons: [
@@ -600,6 +619,36 @@
             else { alert("กรุณาระบุข้อมูล สถานที่ตั้ง(Location) / คู่ค้า(Supplier) หรือ ลูกค้า(Customer)");}
         }
 
+        /*Calculate Location*/
+        function CalculateLocation(dataSubCosts, dataSubQuan, dataSubLat, dataSubLan,
+                                dataCusCosts, dataCusQuan, dataCusLat, dataCusLan) {
+            var horizontalSup = 0, verticalSup = 0, horizontalCus = 0, verticalCus = 0, costQuanSup = 0, costQuanCus = 0;
+            var horizontal, vertical, costQuan;
+            var locationLat, locationLan;
+            var rowCountSup = $('#gridSupplier').appendGrid('getRowCount');
+            var rowCountCus = $('#gridCustomer').appendGrid('getRowCount');
+            var j;
+            for (j = 0; j < rowCountSup; j++) {
+                horizontalSup += (dataSupCosts[j] * dataSupQuan[j] * dataSupLat[j]);
+                verticalSup += (dataSupCosts[j] * dataSupQuan[j] * dataSupLon[j]);
+                costQuanSup += dataSupCosts[j] * dataSupQuan[j];
+            }
+
+            for (j = 0; j < rowCountCus; j++) {
+                horizontalCus += (dataCusCosts[j] * dataCusQuan[j] * dataCusLat[j]);
+                verticalCus += (dataCusCosts[j] * dataCusQuan[j] * dataCusLan[j]);
+                costQuanCus += dataCusCosts[j] * dataCusQuan[j];
+            }
+            horizontal = horizontalSup + horizontalCus;
+            vertical = verticalSup + verticalCus;
+            costQuan = costQuanSup + costQuanCus;
+            locationLat = horizontal / costQuan;
+            locationLan = vertical / costQuan;
+
+            CreateLocationMark(Math.floor((parseFloat(locationLat)) * 100000) / 100000, Math.floor((parseFloat(locationLan)) * 100000) / 100000);
+        }
+
+
         /*Insert row and marker*/
         function InsertRow(type) {
             if (type == 0) {
@@ -667,9 +716,9 @@
     </script>
 
 </head>
-<body id="compareLocation" style="background-color: #F4F4F4">
+<body style="background-color: #F4F4F4">
 
-    <div id="menuBar">
+    <div id="menuBar" style="margin: auto">
         <script>
             $("#menuBar").load("Menubar.htm");
         </script>
