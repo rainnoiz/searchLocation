@@ -257,19 +257,6 @@
                     dataSupLon[iSup] = value;
                 } else { resultCheckValue = false; }
 
-                //validate cost/quantities
-                /*
-                value = ($('#gridSupplier').appendGrid('getAllValue'))[iSup].supCost.toString();
-                checkValue = regCostQuan.test(value);
-                if (checkValue) {
-                    if (value == "0" || value == "") {
-                        dataSupCost[iSup] = "1";
-                    }
-                    else {
-                        dataSupCost[iSup] = value;
-                    }
-                } else { resultCheckValue = false; }
-                */
                 value = ($('#gridSupplier').appendGrid('getAllValue'))[iSup].supQuantity.toString().trim();
                 checkValue = regCostQuan.test(value);
                 if (checkValue) {
@@ -301,19 +288,6 @@
                     dataCusLon[iCus] = value;
                 } else { resultCheckValue = false; }
 
-                //validate cost/quantities
-                /*
-                value = ($('#gridCustomer').appendGrid('getAllValue'))[iCus].cusCost.toString();
-                checkValue = regCostQuan.test(value);
-                if (checkValue) {
-                    if (value == "0" || value == "") {
-                        dataCusCost[iCus] = "1";
-                    }
-                    else {
-                        dataCusCost[iCus] = value;
-                    }
-                } else { resultCheckValue = false; }
-                */
                 value = ($('#gridCustomer').appendGrid('getAllValue'))[iCus].cusQuantity.toString().trim();
                 checkValue = regCostQuan.test(value);
                 if (checkValue) {
@@ -326,20 +300,6 @@
                 } else { resultCheckValue = false; }
                 
             }
-
-            //ตรวจสอบค่า
-            //for (i = 0; i < dataLocLon.length; i++)
-            //{
-            //    alert("dataLocLat:" + dataLocLat[i] + " dataLocLon:" + dataLocLon[i]);
-            //}
-            //for (i = 0; i < dataSupLat.length; i++) {
-            //    alert("dataSupCost:" + dataSupCost[i] + " dataSupQuan:" + dataSupQuan[i] +
-            //        "dataSupLat:" + dataSupLat[i] + " dataSupLon:" + dataSupLon[i]);
-            //}
-            //for (i = 0; i < dataCusLat.length; i++) {
-            //    alert("dataCusCost:" + dataCusCost[i] + " dataCusQuan:" + dataCusQuan[i] +
-            //        "dataCusLat:" + dataCusLat[i] + " dataCusLon:" + dataCusLon[i]);
-            //}
 
             if (resultCheckValue) {
                 
@@ -374,7 +334,7 @@
                             origin: start[i],
                             destination: end[j],
                             //provideRouteAlternatives: true,
-                            optimizeWaypoints: true,
+                            //optimizeWaypoints: true,
                             travelMode: google.maps.TravelMode.DRIVING
                         };
                         iReq++;
@@ -409,39 +369,46 @@
         }
 
         var directionsService;
+        var totalDistance = 0;
+        var iCount = 0;
         function CalculateDistances(start, end, request, quan) {
-            var totalDistance = 0;
-            var inputEnd = end.length;
-            var inputStart = 0;
-            var count = 0;
-            for (var i = 0; i < request.length; i++) {
-                directionsService = new google.maps.DirectionsService();
-                directionsService.route(request[i], function (response, status) {
-                    if (status == google.maps.DirectionsStatus.OK) {
-                        //totalDistance += (response.routes[0].legs[0].distance.value)/1000;
-                        totalDistance += ((response.routes[0].legs[0].distance.value) / 1000) * quan[count];
-                        inputEnd--;
-                        count++;
-                    }
-                    if (inputEnd == 0) {
-                        finishCalculateDistances(inputStart, totalDistance.toFixed(2));
-                        inputEnd = end.length;
-                        inputStart++;
-                        totalDistance = 0;
-                        count = 0;
-                    }
-                    sleep(100);
-                });
-                sleep(250);
+            var iReq = 0;
+            totalDistance = 0;
+            iCount = 0;
+            var countAll = end.length;
+            for (var i = 0; i < start.length; i++) {
+                for (var j = 0; j < end.length; j++) {
+                    GetdirectionsService(request[iReq], quan[j], i, countAll);
+                    iReq++;
+                }
             }
         }
+
+        function GetdirectionsService(request, quan, i, countAll) {
+            directionsService = new google.maps.DirectionsService();
+            directionsService.route(request, function (response, status) {
+                if (status == google.maps.DirectionsStatus.OK) {
+                    totalDistance += ((response.routes[0].legs[0].distance.value) / 1000) * quan;
+                    iCount++;
+                }
+                else {
+                    if (status == "OVER_QUERY_LIMIT") {
+                        setTimeout(function () { GetdirectionsService(request, quan, i, countAll); }, (200));
+                    }
+                }
+
+                if (iCount == countAll) {
+                    finishCalculateDistances(i, totalDistance.toFixed(2));
+                    totalDistance = 0;
+                    iCount = 0;
+                }
+            });
+        }
+
 
         var allLocations;
         function finishCalculateDistances(inputStart,totalDistance) {
             allLocations[inputStart] = totalDistance;
-            //for (var i = 0; i < allLocations.length; i++) {
-            //    alert(allLocations[i] + "i: " + i);
-            //}
             $('#gridLocation').appendGrid('setCtrlValue', 'locScore', inputStart, allLocations[inputStart]);
         }
 
@@ -478,7 +445,7 @@
                     },
                     { name: 'locLat', display: 'พิกัดละติจูด', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '25%' } },
                     { name: 'locLon', display: 'พิกัดลองจิจูด', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '25%' } },
-                    { name: 'locScore', display: 'คะแนน', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' }, ctrlCss: { 'color': 'red' } },
+                    { name: 'locScore', display: 'ระยะทาง', type: 'text', ctrlAttr: { maxlength: 100 }, displayCss: { width: '15%' }, ctrlCss: { 'color': 'red' } },
                     { name: 'locationRecordId', type: 'hidden', value: 0 }
                     ],
                     customRowButtons: [
@@ -702,6 +669,10 @@
             var dataLocName = ["iProgram", "Req"];
             var dataLocLat = [14.59577, 14.618062];
             var dataLocLon = [100.89416, 101.087117];
+            //var dataLocName = ["Req"];
+            //var dataLocLat = [14.618062];
+            //var dataLocLon = [101.087117];
+
             var dataSupLat = [14.608685, 14.030428, 14.582663, 13.724011, 14.353113, 14.665754, 14.741168, 15.012769]; //8
             var dataSupLon = [100.892566, 99.554396, 100.949671, 100.228738, 101.020560, 101.089796, 100.873214, 100.361671];
             var quanSup = [7, 62, 12, 3, 6, 56, 92, 8];
@@ -791,8 +762,8 @@
 
         <section id="button">
             <button id="btnSubmit" onclick="CheckFindLocation();">เปรียบเทียบสถานที่ตั้ง</button>
-            <button id="btnClear" onclick="DeleteAllMarkers();">ยกเลิก</button>
-            <button id="Button1" onclick="testData();">ทดสอบข้อมูล</button>
+            <button id="btnClear" onclick="testData();">ยกเลิก</button>
+            <!--<button id="Button1" onclick="testData();">ทดสอบข้อมูล</button>-->
             <input id="hidMarkID" type="hidden" />
         </section>
     </section>
