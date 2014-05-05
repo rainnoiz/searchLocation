@@ -119,7 +119,7 @@
             for (var i = 0; i < markersCus.length; i++) {
                 markersCus[i].setMap(null);
             }
-            markerLocation.setMap(null);
+            //markerLocation.setMap(null);
 
             //Delete row
             DeleteAllRows();
@@ -212,7 +212,7 @@
                     initRows: 0,
                     columns: [
                     {
-                        name: 'supName', display: 'ชื่อคู่ค้า', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '25%' },
+                        name: 'supName', display: 'ชื่อคู่ค้า', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '30%' },
                         onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/ {
                             var id = $('#gridSupplier').appendGrid('getUniqueIndex', rowIndex);
                             var info = $('#gridSupplier').appendGrid('getCtrlValue', 'supName', rowIndex);
@@ -263,7 +263,7 @@
                     initRows: 0,
                     columns: [
                     {
-                        name: 'cusName', display: 'ชื่อลูกค้า', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '25%' },
+                        name: 'cusName', display: 'ชื่อลูกค้า', type: 'text', ctrlAttr: { maxlength: 200 }, displayCss: { width: '30%' },
                         onChange: function (evt, rowIndex) /*Have a change in this cell go to show mapInfo on marker*/ {
                             var id = $('#gridCustomer').appendGrid('getUniqueIndex', rowIndex);
                             var info = $('#gridCustomer').appendGrid('getCtrlValue', 'cusName', rowIndex);
@@ -610,7 +610,7 @@
 
         <section id="button">
             <button id="btnSubmit" onclick="CheckFindLocation();">คำนวณพิกัดที่ตั้ง</button>
-            <button id="btnClear" onclick="testData();">ยกเลิก</button>
+            <button id="btnClear" onclick="DeleteAllMarkers();">ยกเลิก</button>
             <!--<button id="Button1" onclick="testData();">ทดสอบข้อมูล</button>-->
             <input id="hidMarkID" type="hidden" />
         </section>
